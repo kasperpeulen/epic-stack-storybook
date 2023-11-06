@@ -1,6 +1,6 @@
 import { useForm } from '@conform-to/react'
 import { parse } from '@conform-to/zod'
-import { cssBundleHref } from '@remix-run/css-bundle'
+// import { cssBundleHref } from '@remix-run/css-bundle'
 import {
 	json,
 	type DataFunctionArgs,
@@ -43,8 +43,8 @@ import {
 	DropdownMenuTrigger,
 } from './components/ui/dropdown-menu.tsx'
 import { Icon, href as iconsHref } from './components/ui/icon.tsx'
-import fontStyleSheetUrl from './styles/font.css'
-import tailwindStyleSheetUrl from './styles/tailwind.css'
+// import fontStyleSheetUrl from './styles/font.css?url'
+// import tailwindStyleSheetUrl from './styles/tailwind.css?url'
 import { getUserId, logout } from './utils/auth.server.ts'
 import { ClientHintCheck, getHints, useHints } from './utils/client-hints.tsx'
 import { getConfetti } from './utils/confetti.server.ts'
@@ -65,9 +65,9 @@ export const links: LinksFunction = () => {
 		// Preload svg sprite as a resource to avoid render blocking
 		{ rel: 'preload', href: iconsHref, as: 'image' },
 		// Preload CSS as a resource to avoid render blocking
-		{ rel: 'preload', href: fontStyleSheetUrl, as: 'style' },
-		{ rel: 'preload', href: tailwindStyleSheetUrl, as: 'style' },
-		cssBundleHref ? { rel: 'preload', href: cssBundleHref, as: 'style' } : null,
+		// { rel: 'preload', href: fontStyleSheetUrl, as: 'style' },
+		// { rel: 'preload', href: tailwindStyleSheetUrl, as: 'style' },
+		// cssBundleHref ? { rel: 'preload', href: cssBundleHref, as: 'style' } : null,
 		{ rel: 'mask-icon', href: '/favicons/mask-icon.svg' },
 		{
 			rel: 'alternate icon',
@@ -82,9 +82,9 @@ export const links: LinksFunction = () => {
 		} as const, // necessary to make typescript happy
 		//These should match the css preloads above to avoid css as render blocking resource
 		{ rel: 'icon', type: 'image/svg+xml', href: '/favicons/favicon.svg' },
-		{ rel: 'stylesheet', href: fontStyleSheetUrl },
-		{ rel: 'stylesheet', href: tailwindStyleSheetUrl },
-		cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
+		// { rel: 'stylesheet', href: fontStyleSheetUrl },
+		// { rel: 'stylesheet', href: tailwindStyleSheetUrl },
+		// cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
 	].filter(Boolean)
 }
 
@@ -209,11 +209,11 @@ function Document({
 	return (
 		<html lang="en" className={`${theme} h-full overflow-x-hidden`}>
 			<head>
-				<ClientHintCheck nonce={nonce} />
-				<Meta />
+				{/*<ClientHintCheck nonce={nonce} />*/}
+				{/*<Meta />*/}
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width,initial-scale=1" />
-				<Links />
+				{/*<Links />*/}
 			</head>
 			<body className="bg-background text-foreground">
 				{children}
@@ -224,24 +224,22 @@ function Document({
 					}}
 				/>
 				<ScrollRestoration nonce={nonce} />
-				<Scripts nonce={nonce} />
-				<LiveReload nonce={nonce} />
+				{/*<Scripts nonce={nonce} />*/}
+				{/*<LiveReload nonce={nonce} />*/}
 			</body>
 		</html>
 	)
 }
 
-function App() {
+export function App() {
 	const data = useLoaderData<typeof loader>()
-	const nonce = useNonce()
 	const user = useOptionalUser()
-	const theme = useTheme()
 	const matches = useMatches()
 	const isOnSearchPage = matches.find(m => m.id === 'routes/users+/index')
 	const searchBar = isOnSearchPage ? null : <SearchBar status="idle" />
 
 	return (
-		<Document nonce={nonce} theme={theme} env={data.ENV}>
+		<>
 			<div className="flex h-screen flex-col justify-between">
 				<header className="container py-6">
 					<nav>
@@ -282,16 +280,20 @@ function App() {
 			<Confetti id={data.confettiId} />
 			<EpicToaster toast={data.toast} />
 			<EpicProgress />
-		</Document>
+		</>
 	)
 }
 
-function AppWithProviders() {
+export function AppWithProviders() {
 	const data = useLoaderData<typeof loader>()
+	const nonce = useNonce()
+	const theme = useTheme()
 	return (
 		<AuthenticityTokenProvider token={data.csrfToken}>
 			<HoneypotProvider {...data.honeyProps}>
-				<App />
+				<Document nonce={nonce} theme={theme} env={data.ENV}>
+					<App />
+				</Document>
 			</HoneypotProvider>
 		</AuthenticityTokenProvider>
 	)

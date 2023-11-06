@@ -6,7 +6,9 @@ import { HttpResponse, passthrough, http, type HttpHandler } from 'msw'
 
 const { json } = HttpResponse
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(
+	fileURLToPath(import.meta.url.replace('http://localhost:6006/', 'file:')),
+)
 const here = (...s: Array<string>) => path.join(__dirname, ...s)
 
 const githubUserFixturePath = path.join(

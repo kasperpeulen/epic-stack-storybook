@@ -3,7 +3,9 @@ import { fileURLToPath } from 'node:url'
 import fsExtra from 'fs-extra'
 import { z } from 'zod'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(
+	fileURLToPath(import.meta.url.replace('http://localhost:6006/', 'file:')),
+)
 const fixturesDirPath = path.join(__dirname, '..', 'fixtures')
 
 export async function readFixture(subdir: string, name: string) {
