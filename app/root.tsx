@@ -209,11 +209,11 @@ function Document({
 	return (
 		<html lang="en" className={`${theme} h-full overflow-x-hidden`}>
 			<head>
-				{/*<ClientHintCheck nonce={nonce} />*/}
-				{/*<Meta />*/}
+				<ClientHintCheck nonce={nonce} />
+				<Meta />
 				<meta charSet="utf-8" />
 				<meta name="viewport" content="width=device-width,initial-scale=1" />
-				{/*<Links />*/}
+				<Links />
 			</head>
 			<body className="bg-background text-foreground">
 				{children}
@@ -224,8 +224,8 @@ function Document({
 					}}
 				/>
 				<ScrollRestoration nonce={nonce} />
-				{/*<Scripts nonce={nonce} />*/}
-				{/*<LiveReload nonce={nonce} />*/}
+				<Scripts nonce={nonce} />
+				<LiveReload nonce={nonce} />
 			</body>
 		</html>
 	)

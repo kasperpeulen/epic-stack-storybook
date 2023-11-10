@@ -54,7 +54,6 @@ const config: StorybookConfig = {
 			],
 			resolve: {
 				alias: [
-					{ find: '@remix-run/react', replacement: 'react-router-dom' },
 					{ find: 'graceful-fs', replacement: 'memfs' },
 					{
 						find: /^(.*)(db|cache|litefs)\.server(.*)$/,

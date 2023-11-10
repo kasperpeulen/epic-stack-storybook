@@ -123,12 +123,21 @@ export const cookieMiddleware: Middleware = fn => async args => {
 			)
 		}
 
-		const { status, statusText, headers } = response.clone()
+		const cloned = response.clone()
+
+		let body
+		try {
+			body = await cloned.json()
+		} catch (e) {
+			body = await cloned.text()
+		}
+
 		action(`Response`)({
 			url,
-			status,
-			statusText,
-			headers: Object.fromEntries(headers),
+			status: cloned.status,
+			statusText: cloned.statusText,
+			body,
+			headers: Object.fromEntries(cloned.headers),
 		})
 	}
 

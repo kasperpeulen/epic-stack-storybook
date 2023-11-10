@@ -19,6 +19,7 @@ const lru = remember(
 export const lruCache = lruCacheAdapter(lru)
 
 const data: Record<string, CacheEntry<unknown>> = {}
+
 export const cache: CachifiedCache = {
 	name: 'SQLite cache',
 	get(key) {
