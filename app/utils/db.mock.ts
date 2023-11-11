@@ -1,7 +1,7 @@
-import json from '#prisma/dmmf.json'
-import createPrismaMock, { PrismaMockData } from 'prisma-mock'
-import { fn, MaybeMockedDeep } from '@storybook/test'
 import { type Prisma, type PrismaClient } from '@prisma/client'
+import { fn, type MaybeMockedDeep } from '@storybook/test'
+import createPrismaMock, { type PrismaMockData } from 'prisma-mock'
+import json from '#prisma/dmmf.json'
 
 // @ts-ignore
 globalThis.jest = { fn }

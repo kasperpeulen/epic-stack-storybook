@@ -1,4 +1,4 @@
-import { Meta, StoryObj } from '@storybook/react'
+import { type Meta, type StoryObj } from '@storybook/react'
 import { RouteStory, seedLoader } from '#tests/storybook-utils.tsx'
 
 const meta = {

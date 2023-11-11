@@ -1,7 +1,7 @@
-import { promisify } from 'util'
 import { exec } from 'child_process'
-import routeManifest from '#route-manifest.json'
-import { StubRouteObject } from '#tests/create-remix-stub.js'
+import { promisify } from 'util'
+import { type StubRouteObject } from '#tests/create-remix-stub.js'
+import type routeManifest from '#route-manifest.json'
 
 async function runCommand(command: string) {
 	const { stdout, stderr } = await promisify(exec)(command)

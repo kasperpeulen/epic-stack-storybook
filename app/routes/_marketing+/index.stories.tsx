@@ -1,6 +1,5 @@
-import { Meta, StoryObj } from '@storybook/react'
+import { type Meta, type StoryObj } from '@storybook/react'
 import { RouteStory, seedLoader } from '#tests/storybook-utils.tsx'
-import { prisma } from '#app/utils/db.mock.ts'
 
 const meta = {
 	loaders: [seedLoader],
