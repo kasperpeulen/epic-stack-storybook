@@ -11,6 +11,7 @@ import fs from 'node:fs'
 installUnsecureHeaderPolyfill()
 installCryptoPolyfill()
 
+// instead of reading the files from fs, serve those static files over http
 const original = fs.promises.readFile
 // @ts-ignore
 fs.promises.readFile = async (filename, ...args) => {
@@ -20,7 +21,6 @@ fs.promises.readFile = async (filename, ...args) => {
 	) {
 		return await (await fetch(filename)).arrayBuffer()
 	}
-
 	return original(filename, ...args)
 }
 

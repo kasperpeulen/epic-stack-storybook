@@ -43,6 +43,7 @@ import {
 	DropdownMenuTrigger,
 } from './components/ui/dropdown-menu.tsx'
 import { Icon, href as iconsHref } from './components/ui/icon.tsx'
+// TODO not needed anymore once the epic stack is upgraded to use vite
 import fontStyleSheetUrl from './styles/font.css?url'
 import tailwindStyleSheetUrl from './styles/tailwind.css?url'
 import { getUserId, logout } from './utils/auth.server.ts'
