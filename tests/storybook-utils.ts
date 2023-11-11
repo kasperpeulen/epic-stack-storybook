@@ -1,4 +1,3 @@
-// middleware
 import type {
 	ActionFunction,
 	ActionFunctionArgs,
@@ -18,17 +17,15 @@ export type Middleware = (
 ) => (args: DataFunctionArgs) => ReturnType<DataFunction>
 
 export const lazy = (
-	url: () => Promise<{
-		default: RouteObject['Component']
-	}>,
+	url: () => Promise<{ default: RouteObject['Component'] } & RouteObject>,
 	middleware?: Middleware,
 ) => {
 	return () =>
-		url().then(it => ({
-			...it,
-			loader: it.loader && middleware ? middleware(it.loader) : it.loader,
-			action: it.action && middleware ? middleware(it.action) : it.action,
-			Component: it.default,
+		url().then(mod => ({
+			...mod,
+			loader: mod.loader && middleware ? middleware(mod.loader) : mod.loader,
+			action: mod.action && middleware ? middleware(mod.action) : mod.action,
+			Component: mod.default,
 		}))
 }
 
@@ -41,12 +38,16 @@ export function installUnsecureHeaderPolyfill() {
 	globalThis.Headers.prototype.get = function (name) {
 		if (name.toLowerCase() === 'cookie')
 			return (
-				originalGet.call(this, 'cookie') ?? originalGet.call(this, '$cookie')
+				(
+					originalGet.call(this, 'cookie') ?? originalGet.call(this, '$cookie')
+				)?.replaceAll('HttpOnly; ', '') ?? null
 			)
 		if (name.toLowerCase() === 'set-cookie')
 			return (
-				originalGet.call(this, 'set-cookie') ??
-				originalGet.call(this, 'set-$cookie')
+				(
+					originalGet.call(this, 'set-cookie') ??
+					originalGet.call(this, 'set-$cookie')
+				)?.replaceAll('HttpOnly; ', '') ?? null
 			)
 		return originalGet.call(this, name)
 	}
@@ -85,7 +86,7 @@ export function installUnsecureHeaderPolyfill() {
 }
 
 export function installCryptoPolyfill() {
-	function timingSafeEqual<T extends any>(a: T, b: T): boolean {
+	crypto.timingSafeEqual = (a: any, b: any): boolean => {
 		if (a.byteLength !== b.byteLength) return false
 		let len = a.length,
 			different = false
@@ -95,8 +96,6 @@ export function installCryptoPolyfill() {
 		}
 		return !different
 	}
-
-	crypto.timingSafeEqual = timingSafeEqual
 }
 
 export const cookieMiddleware: Middleware = fn => async args => {
@@ -118,9 +117,7 @@ export const cookieMiddleware: Middleware = fn => async args => {
 	if (response instanceof Response) {
 		const newCookies = response.headers.getSetCookie()
 		if (newCookies) {
-			newCookies.forEach(
-				cookie => (document.cookie = cookie.replaceAll('HttpOnly; ', '')),
-			)
+			newCookies.forEach(cookie => (document.cookie = cookie))
 		}
 
 		const cloned = response.clone()
