@@ -1,3 +1,4 @@
+// Forked from @remix-run/testing
 import * as React from 'react'
 import {
 	UNSAFE_convertRoutesToDataRoutes,
@@ -55,7 +56,7 @@ interface StubNonIndexRouteObject
 	links?: LinksFunction
 }
 
-type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject
+export type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject
 
 export interface RemixStubProps {
 	/**

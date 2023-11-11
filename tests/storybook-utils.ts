@@ -8,6 +8,8 @@ import { RouteObject } from 'react-router-dom'
 import * as setCookieParser from 'set-cookie-parser'
 import crypto from 'crypto'
 import { action } from '@storybook/addon-actions'
+import { type StubRouteObject } from '#tests/create-remix-stub.js'
+import routeManifest from '#route-manifest.json'
 
 type DataFunction = LoaderFunction | ActionFunction
 type DataFunctionArgs = LoaderFunctionArgs | ActionFunctionArgs
@@ -139,4 +141,25 @@ export const cookieMiddleware: Middleware = fn => async args => {
 	}
 
 	return response
+}
+
+export const createRouteManifest = ({
+	manifest,
+	middleware,
+}: {
+	manifest: typeof routeManifest
+	middleware: Middleware
+}): StubRouteObject[] => {
+	return manifest.map(route => {
+		return {
+			...route,
+			lazy: lazy(() => import('../../app/' + route.file), middleware),
+			children: route.children
+				? createRouteManifest({
+						manifest: route.children as typeof routeManifest,
+						middleware,
+				  })
+				: undefined,
+		}
+	}) as StubRouteObject[]
 }

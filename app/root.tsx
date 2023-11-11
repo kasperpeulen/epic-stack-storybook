@@ -284,7 +284,7 @@ export function App() {
 	)
 }
 
-export function AppWithProviders() {
+function AppWithProviders() {
 	const data = useLoaderData<typeof loader>()
 	const nonce = useNonce()
 	const theme = useTheme()

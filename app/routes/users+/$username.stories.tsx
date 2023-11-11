@@ -3,20 +3,23 @@ import { faker } from '@faker-js/faker'
 import { seed } from '#prisma/seed.ts'
 import ProfileRoute from '#app/routes/users+/$username.tsx'
 import { createUser } from '#tests/db-utils.ts'
-import { prisma } from '#app/utils/db.server.ts'
+import { prisma } from '#app/utils/db.mock.ts'
 import {
 	getPasswordHash,
 	getSessionExpirationDate,
 	sessionKey,
 } from '#app/utils/auth.server.ts'
 import { authSessionStorage } from '#app/utils/session.server.ts'
-import { cookieMiddleware } from '#tests/storybook-utils.ts'
+import {
+	cookieMiddleware,
+	createRouteManifest,
+} from '#tests/storybook-utils.ts'
 import { useEffect, useRef } from 'react'
 import { action } from '@storybook/addon-actions'
 import { parse, serialize } from 'cookie'
 import { createRemixStub } from '#tests/create-remix-stub.tsx'
 import { Router } from '@remix-run/router'
-import { createRouteManifest } from '#tests/route-manifest.js'
+import routeManifest from '#route-manifest.json'
 
 const idToSeed = (id: string) =>
 	id
@@ -68,13 +71,15 @@ export default {
 	],
 	render: () => {
 		const RemixStub = createRemixStub(
-			createRouteManifest({ middleware: cookieMiddleware }),
+			createRouteManifest({
+				manifest: routeManifest,
+				middleware: cookieMiddleware,
+			}),
 		)
 
 		const routerRef = useRef<Router>()
 
 		useEffect(() => {
-			console.log(routerRef)
 			const unsubscribe = routerRef.current?.subscribe(routerState => {
 				const { location, navigation } = routerState
 
