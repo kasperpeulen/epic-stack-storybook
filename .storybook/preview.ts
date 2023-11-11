@@ -5,7 +5,7 @@ import { type Mock } from '@storybook/test'
 import {
 	installCryptoPolyfill,
 	installUnsecureHeaderPolyfill,
-} from '#tests/storybook-utils.ts'
+} from '#tests/storybook-utils.tsx'
 
 installUnsecureHeaderPolyfill()
 installCryptoPolyfill()

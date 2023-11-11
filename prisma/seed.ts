@@ -256,7 +256,6 @@ export async function seed() {
 	console.timeEnd(`🐨 Created admin user "kody"`)
 
 	console.timeEnd(`🌱 Database has been seeded`)
-	console.log(prisma.$getInternalState())
 }
 
 // seed()
