@@ -1,8 +1,8 @@
+import fs from 'node:fs'
 import { faker } from '@faker-js/faker'
 import { type PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { UniqueEnforcer } from 'enforce-unique'
-import path from 'path'
 
 const uniqueUsernameEnforcer = new UniqueEnforcer()
 
@@ -108,11 +108,10 @@ export async function img({
 	altText?: string
 	filepath: string
 }) {
-	const url = path.relative('tests/fixtures', filepath)
 	return {
 		altText,
 		contentType: filepath.endsWith('.png') ? 'image/png' : 'image/jpeg',
-		blob: await (await fetch(url)).arrayBuffer(),
+		blob: await fs.promises.readFile(filepath),
 	}
 }
 
@@ -135,4 +134,3 @@ export async function cleanupDb(prisma: PrismaClient) {
 		])
 	}
 }
-

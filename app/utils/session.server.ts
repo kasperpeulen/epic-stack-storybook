@@ -1,5 +1,4 @@
 import { createCookieSessionStorage } from '@remix-run/node'
-import {createCookieFactory} from "@remix-run/server-runtime";
 
 export const authSessionStorage = createCookieSessionStorage({
 	cookie: {

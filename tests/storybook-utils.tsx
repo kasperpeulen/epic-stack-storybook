@@ -13,7 +13,7 @@ import {
 	createRemixStub,
 	type StubRouteObject,
 } from '#tests/create-remix-stub.tsx'
-import routeManifest from '#route-manifest.json'
+import { routeManifest } from '#route-manifest.ts'
 import { useEffect, useRef } from 'react'
 import { prisma } from '#app/utils/db.mock.ts'
 import { parse, serialize } from 'cookie'
@@ -21,12 +21,7 @@ import { diff } from '@vitest/utils/dist/diff.js'
 import { Loader } from '@storybook/react'
 import { faker } from '@faker-js/faker'
 import { seed } from '#prisma/seed.ts'
-import { createUser } from '#tests/db-utils.ts'
-import {
-	getPasswordHash,
-	getSessionExpirationDate,
-	sessionKey,
-} from '#app/utils/auth.server.ts'
+import { getSessionExpirationDate, sessionKey } from '#app/utils/auth.server.ts'
 import { authSessionStorage } from '#app/utils/session.server.ts'
 
 type DataFunction = LoaderFunction | ActionFunction
@@ -182,7 +177,7 @@ export const createRouteManifest = ({
 	return manifest.map(route => {
 		return {
 			...route,
-			lazy: lazy(() => import('../../app/' + route.file), middleware),
+			lazy: lazy(route.file, middleware),
 			children: route.children
 				? createRouteManifest({
 						manifest: route.children as typeof routeManifest,

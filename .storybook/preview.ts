@@ -6,9 +6,22 @@ import {
 	installCryptoPolyfill,
 	installUnsecureHeaderPolyfill,
 } from '#tests/storybook-utils.tsx'
+import fs from 'node:fs'
 
 installUnsecureHeaderPolyfill()
 installCryptoPolyfill()
+
+const original = fs.promises.readFile
+fs.promises.readFile = async (filename, ...args) => {
+	if (
+		typeof filename === 'string' &&
+		(filename.endsWith('.png') || filename.endsWith('.jpg'))
+	) {
+		return await (await fetch(filename)).arrayBuffer()
+	}
+
+	return original(filename, ...args)
+}
 
 const preview: Preview = {
 	loaders: [

@@ -19,15 +19,20 @@ const config: StorybookConfig = {
 	docs: {
 		autodocs: 'tag',
 	},
-	staticDirs: ['../public', '../tests/fixtures'],
+	staticDirs: ['../public', {
+		from: '../tests/fixtures',
+		to: '/test/fixtures'
+	}],
 	async viteFinal(config, { configType }) {
 		return mergeConfig(config, {
-			define: {
-				'process.env': {
+			define: Object.fromEntries(
+				Object.entries({
 					...dotenv.config({ path: '.env.example' }).parsed,
 					NODE_ENV: configType?.toLowerCase(),
-				},
-			},
+				}).map(([key, value]) => {
+					return ['process.env.' + key, JSON.stringify(value)]
+				}),
+			),
 			plugins: [
 				tsconfigPaths(),
 				nodePolyfills({
@@ -42,6 +47,7 @@ const config: StorybookConfig = {
 					overrides: {
 						// Since `fs` is not supported in browsers, we can use the `memfs` package to polyfill it.
 						fs: 'memfs',
+						url: './.storybook/url.mock.ts',
 						// "fs/promises": "memfs",
 						// "node:fs/promises": "memfs"
 					},
@@ -51,6 +57,16 @@ const config: StorybookConfig = {
 			],
 			resolve: {
 				alias: [
+					{
+						find: '@prisma/client/runtime/index-browser',
+						replacement: '@prisma/client/runtime/index-browser',
+					},
+					{
+						find: '@prisma/client',
+						replacement: './node_modules/.prisma/client/index-browser.js',
+					},
+					{ find: 'node:fs/promises', replacement: 'memfs' },
+					{ find: 'node:fs', replacement: 'memfs' },
 					{ find: 'graceful-fs', replacement: 'memfs' },
 					{
 						find: /^(.*)(db|cache|litefs)\.server(.*)$/,

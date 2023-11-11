@@ -231,15 +231,17 @@ function Document({
 	)
 }
 
-export function App() {
+function App() {
 	const data = useLoaderData<typeof loader>()
+	const nonce = useNonce()
 	const user = useOptionalUser()
+	const theme = useTheme()
 	const matches = useMatches()
 	const isOnSearchPage = matches.find(m => m.id === 'routes/users+/index')
 	const searchBar = isOnSearchPage ? null : <SearchBar status="idle" />
 
 	return (
-		<>
+		<Document nonce={nonce} theme={theme} env={data.ENV}>
 			<div className="flex h-screen flex-col justify-between">
 				<header className="container py-6">
 					<nav>
@@ -280,20 +282,16 @@ export function App() {
 			<Confetti id={data.confettiId} />
 			<EpicToaster toast={data.toast} />
 			<EpicProgress />
-		</>
+		</Document>
 	)
 }
 
 function AppWithProviders() {
 	const data = useLoaderData<typeof loader>()
-	const nonce = useNonce()
-	const theme = useTheme()
 	return (
 		<AuthenticityTokenProvider token={data.csrfToken}>
 			<HoneypotProvider {...data.honeyProps}>
-				<Document nonce={nonce} theme={theme} env={data.ENV}>
-					<App />
-				</Document>
+				<App />
 			</HoneypotProvider>
 		</AuthenticityTokenProvider>
 	)

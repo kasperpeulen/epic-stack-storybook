@@ -6,9 +6,7 @@ import { HttpResponse, passthrough, http, type HttpHandler } from 'msw'
 
 const { json } = HttpResponse
 
-const __dirname = path.dirname(
-	fileURLToPath(import.meta.url.replace('http://localhost:6006/', 'file:')),
-)
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const here = (...s: Array<string>) => path.join(__dirname, ...s)
 
 const githubUserFixturePath = path.join(
@@ -20,7 +18,8 @@ const githubUserFixturePath = path.join(
 	),
 )
 
-await fsExtra.ensureDir(path.dirname(githubUserFixturePath))
+// TODO top level await not yet supported by our vite config
+fsExtra.ensureDir(path.dirname(githubUserFixturePath))
 
 function createGitHubUser(code?: string | null) {
 	const createEmail = () => ({
