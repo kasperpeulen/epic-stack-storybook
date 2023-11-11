@@ -5,30 +5,12 @@ const meta = {
 	loaders: [seedLoader],
 	component: RouteStory,
 	args: {
-		url: '/users/kody',
+		url: '/admin/cache',
+		role: 'admin',
 	},
 } satisfies Meta<typeof RouteStory>
 export default meta
 
 type Story = StoryObj<typeof meta>
 
-export const Admin: Story = {
-	args: {
-		url: '/users/kody',
-		role: 'admin',
-	},
-}
-
-export const User: Story = {
-	args: {
-		url: '/users/xj_aleen32',
-		role: 'user',
-	},
-}
-
-export const Anonymous: Story = {
-	args: {
-		url: '/users/kody',
-		role: 'none',
-	},
-}
+export const Admin: Story = {}

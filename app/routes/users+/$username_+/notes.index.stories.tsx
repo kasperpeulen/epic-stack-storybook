@@ -4,31 +4,14 @@ import { RouteStory, seedLoader } from '#tests/storybook-utils.tsx'
 const meta = {
 	loaders: [seedLoader],
 	component: RouteStory,
+	title: 'app/routes/users+/$username_+/notes.index',
 	args: {
-		url: '/users/kody',
+		url: '/users/kody/notes',
+		role: 'admin',
 	},
 } satisfies Meta<typeof RouteStory>
 export default meta
 
 type Story = StoryObj<typeof meta>
 
-export const Admin: Story = {
-	args: {
-		url: '/users/kody',
-		role: 'admin',
-	},
-}
-
-export const User: Story = {
-	args: {
-		url: '/users/xj_aleen32',
-		role: 'user',
-	},
-}
-
-export const Anonymous: Story = {
-	args: {
-		url: '/users/kody',
-		role: 'none',
-	},
-}
+export const Default: Story = {}

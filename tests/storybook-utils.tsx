@@ -193,13 +193,15 @@ export const createRouteManifest = ({
 	}) as StubRouteObject[]
 }
 
+type RouteArgs = { url: string; role: 'admin' | 'user' | 'none' }
+
 const RemixStub = createRemixStub(
 	createRouteManifest({
 		manifest: routeManifest,
 		middleware: cookieMiddleware,
 	}),
 )
-export const RouteStory = ({ url }: { url: string }) => {
+export const RouteStory = ({ url }: RouteArgs) => {
 	const routerRef = useRef<Router>()
 	const oldState = useRef<any>()
 
@@ -268,54 +270,65 @@ export const idToSeed = (id: string) =>
 		.map(it => it.charCodeAt(0))
 		.reduce((a, b) => a + b, 0)
 
-let seedCache: any
+let seedCache: Record<string, unknown> = {}
 
-export const seedLoader: Loader = async context => {
+export const seedLoader: Loader<RouteArgs> = async context => {
 	faker.seed(idToSeed(context.id))
 
-	if (seedCache) {
+	if (seedCache[context.id]) {
 		const data = prisma.$getInternalState()
 		for (var member in data) {
 			// @ts-ignore
-			data[member] = seedCache[member]
+			data[member] = seedCache[context.id][member]
 		}
 	} else {
 		await seed()
-		seedCache = prisma.$getInternalState()
+		seedCache[context.id] = prisma.$getInternalState()
 	}
 
-	const userData = createUser()
-	const user = await prisma.user.create({
-		select: { id: true, email: true, username: true, name: true },
-		data: {
-			...userData,
-			roles: { connect: { name: 'user' } },
-			password: {
-				create: { hash: await getPasswordHash(userData.username) },
-			},
-		},
-	})
-	const session = await prisma.session.create({
-		data: {
-			expirationDate: getSessionExpirationDate(),
-			userId: user.id,
-		},
-		select: { id: true },
-	})
-	const authSession = await authSessionStorage.getSession()
-	authSession.set(sessionKey, session.id)
+	// const userData = createUser()
+	// const user = await prisma.user.create({
+	// 	select: { id: true, email: true, username: true, name: true },
+	// 	data: {
+	// 		...userData,
+	// 		roles: { connect: { name: 'user' } },
+	// 		password: {
+	// 			create: { hash: await getPasswordHash(userData.username) },
+	// 		},
+	// 	},
+	// })
 
 	// reset all cookies
 	Object.keys(parse(document.cookie))
 		.map(key => serialize(key, '', { maxAge: -1 }))
 		.forEach(cookie => {
-			document.cookie = cookie
+			document.cookie = cookie.replaceAll('HttpOnly; ', '')
 		})
 
-	document.cookie = (
-		await authSessionStorage.commitSession(authSession)
-	).replaceAll('HttpOnly; ', '')
+	let user
+	if (context.args.role !== 'none') {
+		user = await prisma.user.findFirstOrThrow({
+			where: { roles: { some: { name: context.args.role } } },
+		})
+		const session = await prisma.session.create({
+			data: {
+				expirationDate: getSessionExpirationDate(),
+				userId: user.id,
+			},
+			select: { id: true },
+		})
+
+		const authSession = await authSessionStorage.getSession()
+		authSession.set(sessionKey, session.id)
+
+		document.cookie = (
+			await authSessionStorage.commitSession(authSession)
+		).replaceAll('HttpOnly; ', '')
+	}
+
 	console.log(prisma.$getInternalState())
 
-	return {}
+	return {
+		user,
+	}
 }
