@@ -85,7 +85,7 @@ export async function action({ request }: DataFunctionArgs) {
 				image: {
 					contentType: data.photoFile.type,
 					// TODO somehow 'prisma-mock' can only handle ArrayBuffer's
-					blob: Buffer.from(await data.photoFile.arrayBuffer()).buffer,
+					blob: Buffer.from(await data.photoFile.arrayBuffer()),
 				},
 			}
 		}),

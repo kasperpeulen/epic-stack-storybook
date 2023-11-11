@@ -12,6 +12,7 @@ installUnsecureHeaderPolyfill()
 installCryptoPolyfill()
 
 const original = fs.promises.readFile
+// @ts-ignore
 fs.promises.readFile = async (filename, ...args) => {
 	if (
 		typeof filename === 'string' &&
