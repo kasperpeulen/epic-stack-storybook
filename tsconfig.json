@@ -13,6 +13,7 @@
     "noImplicitAny": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "types": ["node", "@redux-devtools/extension"],
     "paths": {
       "#*": ["./*"],
       "@/icon-name": [

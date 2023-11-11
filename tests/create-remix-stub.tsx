@@ -1,36 +1,37 @@
 // Forked from @remix-run/testing
-import * as React from 'react'
 import {
-	UNSAFE_convertRoutesToDataRoutes,
+	type MetaFunction,
+	type UNSAFE_AssetsManifest as AssetsManifest,
+	type UNSAFE_EntryRoute as EntryRoute,
+	type UNSAFE_FutureConfig as FutureConfig,
+	UNSAFE_RemixContext as RemixContext,
+	type UNSAFE_RemixContextObject as RemixContextObject,
+	type UNSAFE_RouteModules as RouteModules,
+} from '@remix-run/react'
+import {
+	type ActionFunctionArgs as RRActionFunctionArgs,
 	type HydrationState,
 	type InitialEntry,
-	type Router,
-	type ActionFunctionArgs as RRActionFunctionArgs,
 	type LoaderFunctionArgs as RRLoaderFunctionArgs,
+	type Router,
+	UNSAFE_convertRoutesToDataRoutes,
 } from '@remix-run/router'
-import { UNSAFE_RemixContext as RemixContext } from '@remix-run/react'
-
-import type {
-	UNSAFE_FutureConfig as FutureConfig,
-	UNSAFE_AssetsManifest as AssetsManifest,
-	UNSAFE_EntryRoute as EntryRoute,
-	UNSAFE_RouteModules as RouteModules,
-	UNSAFE_RemixContextObject as RemixContextObject,
-	MetaFunction,
-} from '@remix-run/react'
-import type {
-	DataRouteObject,
-	IndexRouteObject,
-	NonIndexRouteObject,
-} from 'react-router-dom'
-import { createMemoryRouter, Outlet, RouterProvider } from 'react-router-dom'
-import type {
-	ActionFunction,
-	AppLoadContext,
-	LinksFunction,
-	LoaderFunction,
+import {
+	type ActionFunction,
+	type AppLoadContext,
+	type LinksFunction,
+	type LoaderFunction,
 } from '@remix-run/server-runtime'
-import { MutableRefObject } from 'react'
+import * as React from 'react'
+import { type MutableRefObject } from 'react'
+import {
+	createMemoryRouter,
+	type DataRouteObject,
+	type IndexRouteObject,
+	type NonIndexRouteObject,
+	Outlet,
+	RouterProvider,
+} from 'react-router-dom'
 
 interface StubIndexRouteObject
 	extends Omit<
@@ -107,35 +108,35 @@ export function createRemixStub(
 		routerRef ??= React.useRef<Router>()
 		let remixContextRef = React.useRef<RemixContextObject>()
 
-		// if (routerRef.current == null) {
-		remixContextRef.current = {
-			future: {
-				v3_fetcherPersist: future?.v3_fetcherPersist === true,
-			},
-			manifest: {
-				routes: {},
-				entry: { imports: [], module: '' },
-				url: '',
-				version: '',
-			},
-			routeModules: {},
-		}
+		if (routerRef.current == null) {
+			remixContextRef.current = {
+				future: {
+					v3_fetcherPersist: future?.v3_fetcherPersist === true,
+				},
+				manifest: {
+					routes: {},
+					entry: { imports: [], module: '' },
+					url: '',
+					version: '',
+				},
+				routeModules: {},
+			}
 
-		// Update the routes to include context in the loader/action and populate
-		// the manifest and routeModules during the walk
-		let patched = processRoutes(
-			// @ts-expect-error loader/action context types don't match :/
-			UNSAFE_convertRoutesToDataRoutes(routes, r => r),
-			context,
-			remixContextRef.current.manifest,
-			remixContextRef.current.routeModules,
-		)
-		routerRef.current = createMemoryRouter(patched, {
-			initialEntries,
-			initialIndex,
-			hydrationData,
-		})
-		// }
+			// Update the routes to include context in the loader/action and populate
+			// the manifest and routeModules during the walk
+			let patched = processRoutes(
+				// @ts-expect-error loader/action context types don't match :/
+				UNSAFE_convertRoutesToDataRoutes(routes, r => r),
+				context,
+				remixContextRef.current.manifest,
+				remixContextRef.current.routeModules,
+			)
+			routerRef.current = createMemoryRouter(patched, {
+				initialEntries,
+				initialIndex,
+				hydrationData,
+			})
+		}
 
 		return (
 			<RemixContext.Provider value={remixContextRef.current}>

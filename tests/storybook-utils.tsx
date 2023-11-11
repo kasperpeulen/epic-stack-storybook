@@ -1,28 +1,27 @@
-import type {
-	ActionFunction,
-	ActionFunctionArgs,
-	LoaderFunction,
-	LoaderFunctionArgs,
-} from '@remix-run/router'
-import { Router } from '@remix-run/router'
-import { RouteObject } from 'react-router-dom'
-import * as setCookieParser from 'set-cookie-parser'
 import crypto from 'crypto'
+import { faker } from '@faker-js/faker'
+import {
+	type ActionFunction,
+	type ActionFunctionArgs,
+	type LoaderFunction,
+	type LoaderFunctionArgs,
+} from '@remix-run/node'
+import { type Router } from '@remix-run/router'
 import { action } from '@storybook/addon-actions'
+import { type Loader } from '@storybook/react'
+import { diff } from '@vitest/utils/dist/diff.js'
+import { parse, serialize } from 'cookie'
+import { useEffect, useRef } from 'react'
+import * as setCookieParser from 'set-cookie-parser'
+import { getSessionExpirationDate, sessionKey } from '#app/utils/auth.server.ts'
+import { prisma } from '#app/utils/db.mock.ts'
+import { authSessionStorage } from '#app/utils/session.server.ts'
+import { seed } from '#prisma/seed.ts'
+import { routeManifest } from '#route-manifest.ts'
 import {
 	createRemixStub,
 	type StubRouteObject,
 } from '#tests/create-remix-stub.tsx'
-import { routeManifest } from '#route-manifest.ts'
-import { useEffect, useRef } from 'react'
-import { prisma } from '#app/utils/db.mock.ts'
-import { parse, serialize } from 'cookie'
-import { diff } from '@vitest/utils/dist/diff.js'
-import { Loader } from '@storybook/react'
-import { faker } from '@faker-js/faker'
-import { seed } from '#prisma/seed.ts'
-import { getSessionExpirationDate, sessionKey } from '#app/utils/auth.server.ts'
-import { authSessionStorage } from '#app/utils/session.server.ts'
 
 type DataFunction = LoaderFunction | ActionFunction
 type DataFunctionArgs = LoaderFunctionArgs | ActionFunctionArgs
@@ -32,7 +31,11 @@ export type Middleware = (
 ) => (args: DataFunctionArgs) => ReturnType<DataFunction>
 
 export const lazy = (
-	url: () => Promise<{ default: RouteObject['Component'] } & RouteObject>,
+	url: () => Promise<{
+		loader?: DataFunction
+		action?: DataFunction
+		default: unknown
+	}>,
 	middleware?: Middleware,
 ) => {
 	return () =>
@@ -116,18 +119,6 @@ export function installCryptoPolyfill() {
 export const cookieMiddleware: Middleware = fn => async args => {
 	const request = args.request
 	request.headers.set('cookie', document.cookie)
-	const url = `${request.method} ${
-		request.url.split(new URL(request.url).host)[1]
-	}`
-	const formData =
-		request.method === 'POST'
-			? [...(await request.clone().formData())]
-			: undefined
-	action(`Request`)({
-		url: url,
-		headers: Object.fromEntries(request.headers),
-		formData,
-	})
 
 	let response
 	try {
@@ -143,25 +134,7 @@ export const cookieMiddleware: Middleware = fn => async args => {
 			newCookies.forEach(cookie => (document.cookie = cookie))
 		}
 
-		const cloned = response.clone()
-
-		let body
-		// try {
-		// 	body = await cloned.json()
-		// } catch (e) {
-		// 	body = await cloned.text()
-		// }
-
-		action(`Response`)({
-			url,
-			status: cloned.status,
-			statusText: cloned.statusText,
-			body,
-			headers: Object.fromEntries(cloned.headers),
-		})
-		if (!response.ok) {
-			throw response
-		}
+		if (!response.ok) throw response
 	}
 
 	return response
@@ -199,63 +172,115 @@ const RemixStub = createRemixStub(
 export const RouteStory = ({ url }: RouteArgs) => {
 	const routerRef = useRef<Router>()
 	const oldState = useRef<any>()
+	const latestAction = useRef<any>()
+
+	const devTools = useRef(
+		'__REDUX_DEVTOOLS_EXTENSION__' in window
+			? window.__REDUX_DEVTOOLS_EXTENSION__?.connect({})
+			: undefined,
+	)
 
 	useEffect(() => {
-		const unsubscribe = routerRef.current?.subscribe(routerState => {
+		return routerRef.current?.subscribe(routerState => {
 			const { location, navigation } = routerState
+			const fetchers = [...routerState.fetchers]
 
-			if (navigation.state === 'submitting') {
-				action(`POST ${navigation.formAction}`)({
-					...navigation,
+			if (routerState.navigation.state === 'submitting') {
+				const type = `${navigation.formMethod?.toUpperCase()} ${
+					navigation.formAction
+				}`
+				const payload = {
 					formData: navigation.formData ? [...navigation.formData] : undefined,
+					json: navigation.json,
+				}
+				action(`Action ${type}`, { allowUndefined: false })(payload)
+				latestAction.current = { type, ...payload }
+			}
+
+			if (fetchers.some(([, value]) => value.state === 'submitting')) {
+				const navigation = fetchers.find(
+					([, value]) => value.state === 'submitting',
+				)![1]
+
+				const type = `${navigation.formMethod?.toUpperCase()} ${
+					navigation.formAction
+				}`
+				const payload = {
+					formData: navigation.formData ? [...navigation.formData] : undefined,
+					json: navigation.json,
+					fetchers: fetchers,
+				}
+				action(`Action ${type}`, { allowUndefined: false })({
+					formData: navigation.formData ? [...navigation.formData] : undefined,
+					json: navigation.json,
+					fetchers: fetchers,
 				})
+				latestAction.current = { type, ...payload }
 			}
 
 			if (
 				navigation.state === 'loading' &&
+				!navigation.formAction &&
 				!navigation.location?.state?._isRedirect
 			) {
 				const url = `${navigation.location.pathname}${navigation.location.search}${navigation.location.hash}`
-
-				action(`GET ${url}`)({
-					navigation,
-				})
+				const type = `GET ${url}`
+				const payload = {
+					location: navigation.location,
+					fetchers: routerState.fetchers.size > 0 ? fetchers : undefined,
+				}
+				action(`Action GET ${url}`, { allowUndefined: false })(payload)
+				latestAction.current = { type, ...payload }
 			}
 
-			if (navigation.state === 'idle') {
+			if (
+				navigation.state === 'idle' &&
+				fetchers.every(([, value]) => value.state === 'idle')
+			) {
 				const state = {
 					url: `${location.pathname}${location.search}${location.hash}`,
 					db: { ...prisma.$getInternalState() },
 					cookie: parse(document.cookie),
 				}
-				let diffObject = undefined
 				if (oldState.current) {
-					const options = {
-						omitAnnotationLines: true,
-						expand: false,
+					const options = { omitAnnotationLines: true, expand: false }
+					const dbDiff = diff(oldState.current.db, state.db, options)
+					const cookieDiff = diff(
+						oldState.current.cookie,
+						state.cookie,
+						options,
+					)
+					const diffObject = Object.fromEntries(
+						Object.entries({
+							db:
+								dbDiff === 'Compared values have no visual difference.'
+									? undefined
+									: dbDiff,
+							cookie:
+								cookieDiff === 'Compared values have no visual difference.'
+									? undefined
+									: cookieDiff,
+						}).filter(([, value]) => value != null),
+					)
+					if (
+						Object.keys(diffObject).length > 0 ||
+						oldState.current.url !== state.url
+					) {
+						action(`State`, { allowUndefined: false })({
+							...state,
+							diff: diffObject,
+						})
+						devTools.current?.send(latestAction.current, state)
+						oldState.current = state
 					}
-					diffObject = {
-						url: diff(oldState.current.url, state.url, {
-							...options,
-						}),
-						db: diff(oldState.current.db, state.db, {
-							...options,
-						}),
-						cookie: diff(oldState.current.cookie, state.cookie, {
-							...options,
-						}),
-					}
+				} else {
+					action(`Initial state`, { allowUndefined: false })(state)
+					devTools.current?.send({ type: '@@INIT' }, state)
+					oldState.current = state
 				}
-				oldState.current = state
-				action(`Navigation`)({
-					...state,
-					diff: diffObject,
-				})
 			}
 		})
-
-		return unsubscribe
-	}, [routerRef.current])
+	}, [])
 
 	return <RemixStub initialEntries={[url]} routerRef={routerRef} />
 }
@@ -272,7 +297,7 @@ export const seedLoader: Loader<RouteArgs> = async context => {
 
 	if (seedCache[context.id]) {
 		const data = prisma.$getInternalState()
-		for (var member in data) {
+		for (const member in data) {
 			// @ts-ignore
 			data[member] = seedCache[context.id][member]
 		}
@@ -280,18 +305,6 @@ export const seedLoader: Loader<RouteArgs> = async context => {
 		await seed()
 		seedCache[context.id] = prisma.$getInternalState()
 	}
-
-	// const userData = createUser()
-	// const user = await prisma.user.create({
-	// 	select: { id: true, email: true, username: true, name: true },
-	// 	data: {
-	// 		...userData,
-	// 		roles: { connect: { name: 'user' } },
-	// 		password: {
-	// 			create: { hash: await getPasswordHash(userData.username) },
-	// 		},
-	// 	},
-	// })
 
 	// reset all cookies
 	Object.keys(parse(document.cookie))
@@ -321,9 +334,5 @@ export const seedLoader: Loader<RouteArgs> = async context => {
 		).replaceAll('HttpOnly; ', '')
 	}
 
-	console.log(prisma.$getInternalState())
-
-	return {
-		user,
-	}
+	return { user }
 }
