@@ -21,7 +21,7 @@ const config: StorybookConfig = {
 	},
 	staticDirs: ['../public', {
 		from: '../tests/fixtures',
-		to: '/test/fixtures'
+		to: '/tests/fixtures'
 	}],
 	async viteFinal(config, { configType }) {
 		return mergeConfig(config, {
