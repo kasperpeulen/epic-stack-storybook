@@ -103,40 +103,41 @@ export function createRemixStub(
 		initialIndex,
 		hydrationData,
 		future,
-		routerRef,
+		routerRef: userRouterRef,
 	}: RemixStubProps) {
-		routerRef ??= React.useRef<Router>()
+		const ownRouterRef = React.useRef<Router>()
+		const routerRef = userRouterRef ?? ownRouterRef
 		let remixContextRef = React.useRef<RemixContextObject>()
 
-		if (routerRef.current == null) {
-			remixContextRef.current = {
-				future: {
-					v3_fetcherPersist: future?.v3_fetcherPersist === true,
-				},
-				manifest: {
-					routes: {},
-					entry: { imports: [], module: '' },
-					url: '',
-					version: '',
-				},
-				routeModules: {},
-			}
-
-			// Update the routes to include context in the loader/action and populate
-			// the manifest and routeModules during the walk
-			let patched = processRoutes(
-				// @ts-expect-error loader/action context types don't match :/
-				UNSAFE_convertRoutesToDataRoutes(routes, r => r),
-				context,
-				remixContextRef.current.manifest,
-				remixContextRef.current.routeModules,
-			)
-			routerRef.current = createMemoryRouter(patched, {
-				initialEntries,
-				initialIndex,
-				hydrationData,
-			})
+		// if (routerRef.current == null) {
+		remixContextRef.current = {
+			future: {
+				v3_fetcherPersist: future?.v3_fetcherPersist === true,
+			},
+			manifest: {
+				routes: {},
+				entry: { imports: [], module: '' },
+				url: '',
+				version: '',
+			},
+			routeModules: {},
 		}
+
+		// Update the routes to include context in the loader/action and populate
+		// the manifest and routeModules during the walk
+		let patched = processRoutes(
+			// @ts-expect-error loader/action context types don't match :/
+			UNSAFE_convertRoutesToDataRoutes(routes, r => r),
+			context,
+			remixContextRef.current.manifest,
+			remixContextRef.current.routeModules,
+		)
+		routerRef.current = createMemoryRouter(patched, {
+			initialEntries,
+			initialIndex,
+			hydrationData,
+		})
+		// }
 
 		return (
 			<RemixContext.Provider value={remixContextRef.current}>
@@ -188,7 +189,7 @@ function processRoutes(
 			hasAction: route.action != null,
 			hasLoader: route.loader != null,
 			hasErrorBoundary: route.ErrorBoundary != null,
-			module: 'build/stub-path-to-module.js', // any need for this?
+			module: '', // any need for this?
 		}
 		manifest.routes[newRoute.id] = entryRoute
 

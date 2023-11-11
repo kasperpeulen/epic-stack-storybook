@@ -274,7 +274,7 @@ export const RouteStory = ({ url }: RouteArgs) => {
 						oldState.current = state
 					}
 				} else {
-					action(`Initial state`, { allowUndefined: false })(state)
+					action(`State`, { allowUndefined: false })(state)
 					devTools.current?.send({ type: '@@INIT' }, state)
 					oldState.current = state
 				}
