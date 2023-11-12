@@ -7,6 +7,8 @@ import {
 	installUnsecureHeaderPolyfill,
 } from '#tests/storybook-utils.tsx'
 import fs from 'node:fs'
+import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport'
+import { allModes } from '#.storybook/modes.js'
 
 installUnsecureHeaderPolyfill()
 installCryptoPolyfill()
@@ -33,9 +35,33 @@ const preview: Preview = {
 			return {}
 		},
 	],
+	globalTypes: {
+		theme: {
+			description: 'Theme',
+			defaultValue: 'light',
+			toolbar: {
+				title: 'Theme',
+				icon: 'paintbrush',
+				items: ['light', 'dark'],
+				dynamicTitle: true,
+			},
+		},
+	},
 	parameters: {
+		chromatic: {
+			//🔶 Test each story for ArticleCard in two modes
+			modes: {
+				'light mobile': allModes['light mobile'],
+				'light tablet': allModes['light tablet'],
+				'dark mobile': allModes['dark mobile'],
+				'dark tablet': allModes['dark tablet'],
+			},
+		},
 		layout: 'fullscreen',
-		actions: { argTypesRegex: '^on[A-Z].*' },
+		viewport: {
+			viewports: INITIAL_VIEWPORTS,
+		},
+		backgrounds: { disable: true, grid: { disable: true } },
 		controls: {
 			matchers: {
 				color: /(background|color)$/i,

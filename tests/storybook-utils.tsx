@@ -18,6 +18,7 @@ import { useTheme } from '#app/root.js'
 import { getSessionExpirationDate, sessionKey } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.mock.ts'
 import { authSessionStorage } from '#app/utils/session.server.ts'
+import { setTheme } from '#app/utils/theme.server.js'
 import { routeManifest } from '#route-manifest.ts'
 import {
 	createRemixStub,
@@ -342,6 +343,8 @@ export const seedLoader: Loader<RouteArgs> = async context => {
 			await authSessionStorage.commitSession(authSession)
 		).replaceAll('HttpOnly; ', '')
 	}
+
+	document.cookie = setTheme(context.globals.theme)
 
 	return { user }
 }
