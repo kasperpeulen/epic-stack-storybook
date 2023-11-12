@@ -162,7 +162,8 @@ export async function action({ request }: DataFunctionArgs) {
 			title,
 			content,
 			images: {
-				deleteMany: { id: { notIn: imageUpdates.map(i => i.id) } },
+				// TODO not in not support in prisma-mock
+				// deleteMany: { id: { notIn: imageUpdates.map(i => i.id) } },
 				updateMany: imageUpdates.map(updates => ({
 					where: { id: updates.id },
 					data: { ...updates, id: updates.blob ? cuid() : updates.id },

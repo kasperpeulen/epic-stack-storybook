@@ -18,6 +18,7 @@ export default {
 				'**/*.css',
 				'**/*.test.{js,jsx,ts,tsx}',
 				'**/__*.*',
+				'**/*.stories.*',
 			],
 		})
 	},

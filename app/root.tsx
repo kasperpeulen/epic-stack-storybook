@@ -43,8 +43,9 @@ import {
 	DropdownMenuTrigger,
 } from './components/ui/dropdown-menu.tsx'
 import { Icon, href as iconsHref } from './components/ui/icon.tsx'
-import fontStyleSheetUrl from './styles/font.css'
-import tailwindStyleSheetUrl from './styles/tailwind.css'
+// TODO not needed anymore once the epic stack is upgraded to use vite
+import fontStyleSheetUrl from './styles/font.css?url'
+import tailwindStyleSheetUrl from './styles/tailwind.css?url'
 import { getUserId, logout } from './utils/auth.server.ts'
 import { ClientHintCheck, getHints, useHints } from './utils/client-hints.tsx'
 import { getConfetti } from './utils/confetti.server.ts'
@@ -231,73 +232,74 @@ function Document({
 	)
 }
 
-function App() {
+export function App() {
 	const data = useLoaderData<typeof loader>()
-	const nonce = useNonce()
 	const user = useOptionalUser()
-	const theme = useTheme()
 	const matches = useMatches()
 	const isOnSearchPage = matches.find(m => m.id === 'routes/users+/index')
 	const searchBar = isOnSearchPage ? null : <SearchBar status="idle" />
 
 	return (
-		<Document nonce={nonce} theme={theme} env={data.ENV}>
-			<div className="flex h-screen flex-col justify-between">
-				<header className="container py-6">
-					<nav>
-						<div className="flex flex-wrap items-center justify-between gap-4 sm:flex-nowrap md:gap-8">
-							<Link to="/">
-								<div className="font-light">epic</div>
-								<div className="font-bold">notes</div>
-							</Link>
-							<div className="ml-auto hidden max-w-sm flex-1 sm:block">
-								{searchBar}
-							</div>
-							<div className="flex items-center gap-10">
-								{user ? (
-									<UserDropdown />
-								) : (
-									<Button asChild variant="default" size="sm">
-										<Link to="/login">Log In</Link>
-									</Button>
-								)}
-							</div>
-							<div className="block w-full sm:hidden">{searchBar}</div>
-						</div>
-					</nav>
-				</header>
-
-				<div className="flex-1">
-					<Outlet />
-				</div>
-
-				<div className="container flex justify-between pb-5">
-					<Link to="/">
-						<div className="font-light">epic</div>
-						<div className="font-bold">notes</div>
-					</Link>
-					<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
-				</div>
-			</div>
-			<Confetti id={data.confettiId} />
-			<EpicToaster toast={data.toast} />
-			<EpicProgress />
-		</Document>
-	)
-}
-
-function AppWithProviders() {
-	const data = useLoaderData<typeof loader>()
-	return (
 		<AuthenticityTokenProvider token={data.csrfToken}>
 			<HoneypotProvider {...data.honeyProps}>
-				<App />
+				<div className="flex h-screen flex-col justify-between">
+					<header className="container py-6">
+						<nav>
+							<div className="flex flex-wrap items-center justify-between gap-4 sm:flex-nowrap md:gap-8">
+								<Link to="/">
+									<div className="font-light">epic</div>
+									<div className="font-bold">notes</div>
+								</Link>
+								<div className="ml-auto hidden max-w-sm flex-1 sm:block">
+									{searchBar}
+								</div>
+								<div className="flex items-center gap-10">
+									{user ? (
+										<UserDropdown />
+									) : (
+										<Button asChild variant="default" size="sm">
+											<Link to="/login">Log In</Link>
+										</Button>
+									)}
+								</div>
+								<div className="block w-full sm:hidden">{searchBar}</div>
+							</div>
+						</nav>
+					</header>
+
+					<div className="flex-1">
+						<Outlet />
+					</div>
+
+					<div className="container flex justify-between pb-5">
+						<Link to="/">
+							<div className="font-light">epic</div>
+							<div className="font-bold">notes</div>
+						</Link>
+						<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
+					</div>
+				</div>
+				<Confetti id={data.confettiId} />
+				<EpicToaster toast={data.toast} />
+				<EpicProgress />
 			</HoneypotProvider>
 		</AuthenticityTokenProvider>
 	)
 }
 
-export default withSentry(AppWithProviders)
+function AppWithDocument() {
+	const nonce = useNonce()
+	const theme = useTheme()
+	const data = useLoaderData<typeof loader>()
+
+	return (
+		<Document nonce={nonce} theme={theme} env={data.ENV}>
+			<App />
+		</Document>
+	)
+}
+
+export default withSentry(AppWithDocument)
 
 function UserDropdown() {
 	const user = useUser()

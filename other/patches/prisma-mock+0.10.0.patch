@@ -1,0 +1,13 @@
+diff --git a/node_modules/prisma-mock/lib/index.js b/node_modules/prisma-mock/lib/index.js
+index f7ad992..c14b640 100644
+--- a/node_modules/prisma-mock/lib/index.js
++++ b/node_modules/prisma-mock/lib/index.js
+@@ -470,7 +470,7 @@ const createPrismaMock = (data = {}, datamodel = client_1.Prisma.dmmf.datamodel,
+                         const { [field.name]: _update, ...rest } = d;
+                         d = rest;
+                     }
+-                    if (field.kind === "scalar") {
++                    if (field.kind === "scalar" && field.type !== 'Bytes') {
+                         if (c.increment) {
+                             d = {
+                                 ...d,

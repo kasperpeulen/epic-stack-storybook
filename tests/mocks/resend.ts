@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
-import { HttpResponse, http, type HttpHandler } from 'msw'
+import { action } from '@storybook/addon-actions'
+import { http, type HttpHandler, HttpResponse } from 'msw'
 import { requireHeader, writeEmail } from './utils.ts'
 
 const { json } = HttpResponse
@@ -9,6 +10,7 @@ export const handlers: Array<HttpHandler> = [
 		requireHeader(request.headers, 'Authorization')
 		const body = await request.json()
 		console.info('🔶 mocked email contents:', body)
+		action('Email')(body)
 
 		const email = await writeEmail(body)
 

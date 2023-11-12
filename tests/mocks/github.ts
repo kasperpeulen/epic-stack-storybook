@@ -18,7 +18,8 @@ const githubUserFixturePath = path.join(
 	),
 )
 
-await fsExtra.ensureDir(path.dirname(githubUserFixturePath))
+// TODO top level await not yet supported by our vite config
+fsExtra.ensureDir(path.dirname(githubUserFixturePath))
 
 function createGitHubUser(code?: string | null) {
 	const createEmail = () => ({
