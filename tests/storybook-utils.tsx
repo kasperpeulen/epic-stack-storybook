@@ -13,6 +13,7 @@ import { diff } from '@vitest/utils/dist/diff.js'
 import { parse, serialize } from 'cookie'
 import { useEffect, useRef } from 'react'
 import * as setCookieParser from 'set-cookie-parser'
+import { useTheme } from '#app/root.js'
 import { getSessionExpirationDate, sessionKey } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.mock.ts'
 import { authSessionStorage } from '#app/utils/session.server.ts'
@@ -148,9 +149,22 @@ export const createRouteManifest = ({
 	middleware: Middleware
 }): StubRouteObject[] => {
 	return manifest.map(route => {
+		const file = route.file().then(mod => ({
+			...mod,
+			default: function App() {
+				const theme = useTheme()
+				return (
+					<div
+						className={`${theme} h-full overflow-x-hidden bg-background text-foreground`}
+					>
+						<mod.App />
+					</div>
+				)
+			},
+		}))
 		return {
 			...route,
-			lazy: lazy(route.file, middleware),
+			lazy: lazy(route.id === 'root' ? () => file : route.file, middleware),
 			children: route.children
 				? createRouteManifest({
 						manifest: route.children as typeof routeManifest,
