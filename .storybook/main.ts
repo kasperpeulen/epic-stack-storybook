@@ -19,10 +19,13 @@ const config: StorybookConfig = {
 	docs: {
 		autodocs: 'tag',
 	},
-	staticDirs: ['../public', {
-		from: '../tests/fixtures',
-		to: '/tests/fixtures'
-	}],
+	staticDirs: [
+		'../public',
+		{
+			from: '../tests/fixtures',
+			to: '/tests/fixtures',
+		},
+	],
 	async viteFinal(config, { configType }) {
 		return mergeConfig(config, {
 			define: Object.fromEntries(
@@ -57,6 +60,7 @@ const config: StorybookConfig = {
 			],
 			resolve: {
 				alias: [
+					{ find: 'bcryptjs', replacement: './.storybook/bcryptjs.mock.ts' },
 					{
 						find: '@prisma/client/runtime/index-browser',
 						replacement: '@prisma/client/runtime/index-browser',

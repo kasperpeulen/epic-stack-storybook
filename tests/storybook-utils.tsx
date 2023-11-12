@@ -16,12 +16,12 @@ import * as setCookieParser from 'set-cookie-parser'
 import { getSessionExpirationDate, sessionKey } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.mock.ts'
 import { authSessionStorage } from '#app/utils/session.server.ts'
-import { seed } from '#prisma/seed.ts'
 import { routeManifest } from '#route-manifest.ts'
 import {
 	createRemixStub,
 	type StubRouteObject,
 } from '#tests/create-remix-stub.tsx'
+import { seed } from '#tests/db-utils.ts'
 
 type DataFunction = LoaderFunction | ActionFunction
 type DataFunctionArgs = LoaderFunctionArgs | ActionFunctionArgs
@@ -290,21 +290,10 @@ export const idToSeed = (id: string) =>
 		.map(it => it.charCodeAt(0))
 		.reduce((a, b) => a + b, 0)
 
-let seedCache: Record<string, unknown> = {}
-
 export const seedLoader: Loader<RouteArgs> = async context => {
 	faker.seed(idToSeed(context.id))
 
-	if (seedCache[context.id]) {
-		const data = prisma.$getInternalState()
-		for (const member in data) {
-			// @ts-ignore
-			data[member] = seedCache[context.id][member]
-		}
-	} else {
-		await seed()
-		seedCache[context.id] = prisma.$getInternalState()
-	}
+	await seed()
 
 	// reset all cookies
 	Object.keys(parse(document.cookie))
@@ -319,11 +308,7 @@ export const seedLoader: Loader<RouteArgs> = async context => {
 			where: { roles: { some: { name: context.args.role } } },
 		})
 		const session = await prisma.session.create({
-			data: {
-				expirationDate: getSessionExpirationDate(),
-				userId: user.id,
-			},
-			select: { id: true },
+			data: { expirationDate: getSessionExpirationDate(), userId: user.id },
 		})
 
 		const authSession = await authSessionStorage.getSession()
