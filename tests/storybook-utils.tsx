@@ -255,7 +255,15 @@ export const RouteStory = ({ url }: RouteArgs) => {
 					url: `${location.pathname}${location.search}${location.hash}`,
 					db: { ...prisma.$getInternalState() },
 					cookie: parse(document.cookie),
-					fs: memfs.vol.toJSON(),
+					fs: Object.fromEntries(
+						Object.entries(memfs.vol.toJSON()).map(([key, value]) => {
+							try {
+								// @ts-ignore
+								value = JSON.parse(value)
+							} catch (e) {}
+							return [key, value]
+						}),
+					),
 				}
 
 				if (oldState.current) {
