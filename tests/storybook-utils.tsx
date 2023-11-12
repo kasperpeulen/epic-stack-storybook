@@ -11,6 +11,7 @@ import { action } from '@storybook/addon-actions'
 import { type Loader } from '@storybook/react'
 import { diff } from '@vitest/utils/dist/diff.js'
 import { parse, serialize } from 'cookie'
+import * as memfs from 'memfs'
 import { useEffect, useRef } from 'react'
 import * as setCookieParser from 'set-cookie-parser'
 import { useTheme } from '#app/root.js'
@@ -125,17 +126,16 @@ export const cookieMiddleware: Middleware = fn => async args => {
 	try {
 		response = await fn(args)
 	} catch (e) {
-		if (!(e instanceof Response)) throw e
-		response = e
+		if (e instanceof Response) {
+			e.headers.getSetCookie().forEach(cookie => (document.cookie = cookie))
+		}
+		throw e
 	}
 
 	if (response instanceof Response) {
-		const newCookies = response.headers.getSetCookie()
-		if (newCookies) {
-			newCookies.forEach(cookie => (document.cookie = cookie))
-		}
-
-		if (!response.ok) throw response
+		response.headers
+			.getSetCookie()
+			.forEach(cookie => (document.cookie = cookie))
 	}
 
 	return response
@@ -255,7 +255,9 @@ export const RouteStory = ({ url }: RouteArgs) => {
 					url: `${location.pathname}${location.search}${location.hash}`,
 					db: { ...prisma.$getInternalState() },
 					cookie: parse(document.cookie),
+					fs: memfs.vol.toJSON(),
 				}
+
 				if (oldState.current) {
 					const options = { omitAnnotationLines: true, expand: false }
 					const dbDiff = diff(oldState.current.db, state.db, options)
